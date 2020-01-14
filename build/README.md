@@ -35,7 +35,7 @@ The `build` property defines how the definition maps to image tags and what type
         "base:${VERSION}-debian-9",
         "base:${VERSION}-stretch"
     ]
-},
+}
 ```
 
 The **`rootDistro`** property can be `debian`, `alpine`, or `redhat` currently. Ubuntu-based containers should use `debian`.
@@ -74,6 +74,14 @@ mcr.microsoft.com/vscode/devcontainers/base
 In this case, Debian is also the one that is used for `latest` for the `base` repository, so that tag gets applied too.  If you ran only the Alpine or Ubuntu versions, the latest tag would not update.
 
 There's a special "dev" version that can be used to build master on CI - I ended up needing this to test and others would if they base an image off of one of the MCR images.  e.g. `dev-debian-9`.
+
+Finally, there is a **`parent`** property that can be used to specify if the container depends an image created as a part of another container build. For example, `typescript-node-10` uses the image from `javascript-node-10` and therefore includes the following:
+
+```json
+"build" {
+    "parent": "javascript-node-10"
+}
+```
 
 ### The dependencies property
 
