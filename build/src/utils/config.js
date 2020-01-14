@@ -15,6 +15,44 @@ config.definitionBuildSettings = config.definitionBuildSettings || {};
 const stagingFolders = {};
 const definitionTagLookup = {};
 
+// Must be called first
+async function loadConfig(repoPath) {
+    repoPath = repoPath || path.join(__dirname, '..', '..', '..');
+
+    const containersPath = path.join(repoPath, getConfig('containersPathInRepo', 'containers'));
+    const definitions = await asyncUtils.readdir(containersPath, { withFileTypes: true });
+    await asyncUtils.forEach(definitions, async (definitionFolder) => {
+        if (!definitionFolder.isDirectory()) {
+            return;
+        }
+        const definitionId = definitionFolder.name;
+        const possibleDefinitionBuildJson = path.join(containersPath, definitionId, getConfig('definitionBuildConfigFile', 'definition-build.json'));
+        if (await asyncUtils.exists(possibleDefinitionBuildJson)) {
+            const buildJson = await jsonc.read(possibleDefinitionBuildJson);
+            if (buildJson.build) {
+                config.definitionBuildSettings[definitionId] = buildJson.build;
+            }
+            if (buildJson.dependencies) {
+                config.definitionDependencies[definitionId] = buildJson.dependencies;
+            }
+        }
+    });
+
+    // Populate tag lookup
+    for (let definitionId in config.definitionBuildSettings) {
+        if (config.definitionBuildSettings[definitionId].tags) {
+            const blankTagList = getTagsForVersion(definitionId, '', 'ANY', 'ANY');
+            blankTagList.forEach((blankTag) => {
+                definitionTagLookup[blankTag] = definitionId;
+            });
+            const devTagList = getTagsForVersion(definitionId, 'dev', 'ANY', 'ANY');
+            devTagList.forEach((devTag) => {
+                definitionTagLookup[devTag] = definitionId;
+            });
+        }
+    }
+}
+
 // Get a value from the config file or a similarly named env var
 function getConfig(property, defaultVal) {
     defaultVal = defaultVal || null;
@@ -82,164 +120,132 @@ function getTagsForVersion(definitionId, version, registry, registryPath) {
     }, []);
 }
 
-module.exports = {
+// Generate complete list of tags for a given definition
+function getTagList(definitionId, release, updateLatest, registry, registryPath) {
+    const version = getVersionFromRelease(release);
+    if (version === 'dev') {
+        return getTagsForVersion(definitionId, 'dev', registry, registryPath);
+    }
 
-    // Must be called first
-    loadConfig: async (repoPath) => {
-        repoPath = repoPath || path.join(__dirname, '..', '..', '..');
+    const versionParts = version.split('.');
+    if (versionParts.length !== 3) {
+        throw (`Invalid version format in ${version}.`);
+    }
 
-        const containersPath = path.join(repoPath, getConfig('containersPathInRepo', 'containers'));
-        const definitions = await asyncUtils.readdir(containersPath, { withFileTypes: true });
-        await asyncUtils.forEach(definitions, async (definitionFolder) => {
-            if (!definitionFolder.isDirectory()) {
-                return;
-            }
-            const definitionId = definitionFolder.name;
-            const possibleDefinitionBuildJson = path.join(containersPath, definitionId, getConfig('definitionBuildConfigFile', 'definition-build.json'));
-            if (await asyncUtils.exists(possibleDefinitionBuildJson)) {
-                const buildJson = await jsonc.read(possibleDefinitionBuildJson);
-                if (buildJson.build) {
-                    config.definitionBuildSettings[definitionId] = buildJson.build;
-                }
-                if (buildJson.dependencies) {
-                   config.definitionDependencies[definitionId] = buildJson.dependencies;
-                }
-            }
-        });
-
-        // Populate tag lookup
-        for(let definitionId in config.definitionBuildSettings) {
-            if (config.definitionBuildSettings[definitionId].tags) {
-                const blankTagList = getTagsForVersion(definitionId, '', 'ANY', 'ANY');
-                blankTagList.forEach((blankTag) => {
-                    definitionTagLookup[blankTag] = definitionId;
-                });
-                const devTagList = getTagsForVersion(definitionId, 'dev', 'ANY', 'ANY');
-                devTagList.forEach((devTag) => {
-                    definitionTagLookup[devTag] = definitionId;
-                });
-            }
-        }
-    },
-
-    // Generate complete list of tags for a given definition
-    getTagList: (definitionId, release, updateLatest, registry, registryPath) => {
-        const version = getVersionFromRelease(release);
-        if (version === 'dev') {
-            return getTagsForVersion(definitionId, 'dev', registry, registryPath);
-        }
-
-        const versionParts = version.split('.');
-        if (versionParts.length !== 3) {
-            throw (`Invalid version format in ${version}.`);
-        }
-
-        const versionList = updateLatest ? [
+    const versionList = updateLatest ? [
+        version,
+        `${versionParts[0]}.${versionParts[1]}`,
+        `${versionParts[0]}`,
+        '' // This is the equivalent of latest for qualified tags- e.g. python:3 instead of python:0.35.0-3
+    ] : [
             version,
-            `${versionParts[0]}.${versionParts[1]}`,
-            `${versionParts[0]}`,
-            '' // This is the equivalent of latest for qualified tags- e.g. python:3 instead of python:0.35.0-3
-        ] : [
-                version,
-                `${versionParts[0]}.${versionParts[1]}`
-            ];
+            `${versionParts[0]}.${versionParts[1]}`
+        ];
 
-        // If this variant should actually be the latest tag, use it
-        let tagList = (updateLatest && config.definitionBuildSettings[definitionId].latest) ? getLatestTag(definitionId, registry, registryPath) : [];
-        versionList.forEach((tagVersion) => {
-            tagList = tagList.concat(getTagsForVersion(definitionId, tagVersion, registry, registryPath));
-        });
+    // If this variant should actually be the latest tag, use it
+    let tagList = (updateLatest && config.definitionBuildSettings[definitionId].latest) ? getLatestTag(definitionId, registry, registryPath) : [];
+    versionList.forEach((tagVersion) => {
+        tagList = tagList.concat(getTagsForVersion(definitionId, tagVersion, registry, registryPath));
+    });
 
-        return tagList;
-    },
+    return tagList;
+}
 
-    // Walk the image build config and sort list so parents build before children
-    getSortedDefinitionBuildList: () => {
-        const sortedList = [];
-        const settingsCopy = JSON.parse(JSON.stringify(config.definitionBuildSettings));
+// Walk the image build config and sort list so parents build before children
+function getSortedDefinitionBuildList() {
+    const sortedList = [];
+    const settingsCopy = JSON.parse(JSON.stringify(config.definitionBuildSettings));
 
-        for (let definitionId in config.definitionBuildSettings) {
-            const add = (defId) => {
-                if (typeof settingsCopy[defId] === 'object') {
-                    add(settingsCopy[defId].parent);
-                    sortedList.push(defId);
-                    settingsCopy[defId] = undefined;
-                }
+    for (let definitionId in config.definitionBuildSettings) {
+        const add = (defId) => {
+            if (typeof settingsCopy[defId] === 'object') {
+                add(settingsCopy[defId].parent);
+                sortedList.push(defId);
+                settingsCopy[defId] = undefined;
             }
-            add(definitionId);
         }
+        add(definitionId);
+    }
 
-        return sortedList;
-    },
+    return sortedList;
+}
 
-    // Get parent tag for a given child definition
-    getParentTagForVersion: (definitionId, version, registry, registryPath) => {
-        const parentId = config.definitionBuildSettings[definitionId].parent;
-        return parentId ? getTagsForVersion(parentId, version, registry, registryPath)[0] : null;
-    },
+// Get parent tag for a given child definition
+function getParentTagForVersion(definitionId, version, registry, registryPath) {
+    const parentId = config.definitionBuildSettings[definitionId].parent;
+    return parentId ? getTagsForVersion(parentId, version, registry, registryPath)[0] : null;
+}
 
-    getUpdatedTag: (currentTag, currentRegistry, currentRegistryPath, updatedVersion, updatedRegistry, updatedRegistryPath) => {
-        updatedRegistry = updatedRegistry || currentRegistry;
-        updatedRegistryPath = updatedRegistryPath || currentRegistryPath;
-        const captureGroups = new RegExp(`${currentRegistry}/${currentRegistryPath}/(.+:.+)`).exec(currentTag);
-        const updatedTags = getTagsForVersion(definitionTagLookup[`ANY/ANY/${captureGroups[1]}`], updatedVersion, updatedRegistry, updatedRegistryPath);
-        if(updatedTags && updatedTags.length > 0) {
-            console.log(`      Updating ${currentTag}\n      to ${updatedTags[0]}`);
-            return updatedTags[0];
-        }
-        // In the case where this is already a tag with a version number in it,
-        // we won't get an updated tag returned, so we'll just reuse the current tag.
-        return currentTag;
-    },
+function getUpdatedTag(currentTag, currentRegistry, currentRegistryPath, updatedVersion, updatedRegistry, updatedRegistryPath) {
+    updatedRegistry = updatedRegistry || currentRegistry;
+    updatedRegistryPath = updatedRegistryPath || currentRegistryPath;
+    const captureGroups = new RegExp(`${currentRegistry}/${currentRegistryPath}/(.+:.+)`).exec(currentTag);
+    const updatedTags = getTagsForVersion(definitionTagLookup[`ANY/ANY/${captureGroups[1]}`], updatedVersion, updatedRegistry, updatedRegistryPath);
+    if (updatedTags && updatedTags.length > 0) {
+        console.log(`      Updating ${currentTag}\n      to ${updatedTags[0]}`);
+        return updatedTags[0];
+    }
+    // In the case where this is already a tag with a version number in it,
+    // we won't get an updated tag returned, so we'll just reuse the current tag.
+    return currentTag;
+}
 
-    // Return just the manor and minor version of a release number
-    majorMinorFromRelease: (release) => {
-        const version = getVersionFromRelease(release);
+// Return just the manor and minor version of a release number
+function majorMinorFromRelease(release) {
+    const version = getVersionFromRelease(release);
 
-        if (version === 'dev') {
-            return 'dev';
-        }
+    if (version === 'dev') {
+        return 'dev';
+    }
 
-        const versionParts = version.split('.');
-        return `${versionParts[0]}.${versionParts[1]}`;
-    },
+    const versionParts = version.split('.');
+    return `${versionParts[0]}.${versionParts[1]}`;
+}
 
-    // Return an object from a map based on the linux distro for the definition
-    objectByDefinitionLinuxDistro: (definitionId, objectsByDistro) => {
-        const distro = getLinuxDistroForDefinition(definitionId);
-        const obj = objectsByDistro[distro];
-        return obj;
-    },
+// Return an object from a map based on the linux distro for the definition
+function objectByDefinitionLinuxDistro(definitionId, objectsByDistro) {
+    const distro = getLinuxDistroForDefinition(definitionId);
+    const obj = objectsByDistro[distro];
+    return obj;
+}
 
-    getDefinitionDependencies: (definitionId) => {
-        return config.definitionDependencies[definitionId];
-    },
+function getDefinitionDependencies(definitionId) {
+    return config.definitionDependencies[definitionId];
+}
 
-    getAllDependencies: () => {
-        return config.definitionDependencies;
-    },
+function getAllDependencies() {
+    return config.definitionDependencies;
+}
 
-    getStagingFolder: async (release) => {
-        if (!stagingFolders[release]) {
-            const stagingFolder = path.join(os.tmpdir(), 'vscode-dev-containers', release);
-            console.log(`(*) Copying files to ${stagingFolder}\n`);
-            await asyncUtils.rimraf(stagingFolder); // Clean out folder if it exists
-            await asyncUtils.mkdirp(stagingFolder); // Create the folder
-            await asyncUtils.copyFiles(
-                path.resolve(__dirname, '..', '..', '..'),
-                getConfig('filesToStage'),
-                stagingFolder);
-        
-            stagingFolders[release] = stagingFolder;
-        }
-        return stagingFolders[release];
-    },
+async function getStagingFolder(release) {
+    if (!stagingFolders[release]) {
+        const stagingFolder = path.join(os.tmpdir(), 'vscode-dev-containers', release);
+        console.log(`(*) Copying files to ${stagingFolder}\n`);
+        await asyncUtils.rimraf(stagingFolder); // Clean out folder if it exists
+        await asyncUtils.mkdirp(stagingFolder); // Create the folder
+        await asyncUtils.copyFiles(
+            path.resolve(__dirname, '..', '..', '..'),
+            getConfig('filesToStage'),
+            stagingFolder);
 
+        stagingFolders[release] = stagingFolder;
+    }
+    return stagingFolders[release];
+}
+
+module.exports = {
+    loadConfig: loadConfig,
+    getTagList: getTagList,
+    getSortedDefinitionBuildList: getSortedDefinitionBuildList,
+    getParentTagForVersion: getParentTagForVersion,
+    getUpdatedTag: getUpdatedTag,
+    majorMinorFromRelease: majorMinorFromRelease,
+    objectByDefinitionLinuxDistro: objectByDefinitionLinuxDistro,
+    getDefinitionDependencies: getDefinitionDependencies,
+    getAllDependencies: getAllDependencies,
+    getStagingFolder: getStagingFolder,
     getLinuxDistroForDefinition: getLinuxDistroForDefinition,
-
     getVersionFromRelease: getVersionFromRelease,
-
     getTagsForVersion: getTagsForVersion,
-
     getConfig: getConfig
 };

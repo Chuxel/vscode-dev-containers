@@ -27,7 +27,7 @@
 			"args": [
 				"pack",
 				"--no-clean",
-				"--release", "v0.0.1",
+				"--release", "clantz/image-generation",
 				"--github-repo", "microsoft/vscode-dev-containers",
 				"--registry", "clantz.azurecr.io",
 				"--registryPath", "vscode/devcontainers",

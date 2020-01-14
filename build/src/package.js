@@ -44,7 +44,7 @@ async function package(repo, release, updateLatest, registry, registryPath, stub
             path.join(definitionStagingFolder, currentDefinitionId),
             currentDefinitionId, repo, release, registry, registryPath, stubRegistry, stubRegistryPath);
     });
-    
+
     console.log('(*) Packaging...');
     const opts = { stdio: 'inherit', cwd: stagingFolder, shell: true };
     await asyncUtils.spawn('yarn', ['install'], opts);

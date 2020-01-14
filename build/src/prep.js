@@ -77,49 +77,50 @@ function getFromSnippet(definitionId, imageTag, repo, release, baseDockerFileExi
         `FROM ${imageTag}`;
 }
 
-module.exports = {
-    createStub: async function (dotDevContainerPath, definitionId, repo, release, baseDockerFileExists, stubRegistry, stubRegistryPath) {
-        const userDockerFilePath = path.join(dotDevContainerPath, 'Dockerfile');
-        console.log('(*) Generating user Dockerfile...');
-        const templateDockerfile = await configUtils.objectByDefinitionLinuxDistro(definitionId, stubPromises);
-        const majorMinor = configUtils.majorMinorFromRelease(release);
-        const imageTag = configUtils.getTagsForVersion(definitionId, majorMinor, stubRegistry, stubRegistryPath)[0];
-        const userDockerFile = templateDockerfile.replace(
-            'FROM REPLACE-ME', getFromSnippet(definitionId, imageTag, repo, release, baseDockerFileExists));
-        await asyncUtils.writeFile(userDockerFilePath, userDockerFile);
-    },
-
-    updateStub: async function (dotDevContainerPath, definitionId, repo, release, baseDockerFileExists, registry, registryPath) {
-        console.log('(*) Updating user Dockerfile...');
-        const userDockerFilePath = path.join(dotDevContainerPath, 'Dockerfile');
-        const userDockerFile = await asyncUtils.readFile(userDockerFilePath);
-
-        const majorMinor = configUtils.majorMinorFromRelease(release);
-        const imageTag = configUtils.getTagsForVersion(definitionId, majorMinor, registry, registryPath)[0];
-        const userDockerFileModified = userDockerFile.replace(/FROM .+:.+/,
-            getFromSnippet(definitionId, imageTag, repo, release, baseDockerFileExists));
-        await asyncUtils.writeFile(userDockerFilePath, userDockerFileModified);
-    },
-
-    updateConfigForRelease: async function (definitionPath, definitionId, repo, release, registry, registryPath, stubRegistry, stubRegistryPath) {
-        // Look for context in devcontainer.json and use it to build the Dockerfile
-        console.log(`(*) Making version specific updates to ${definitionId}...`);
-        const dotDevContainerPath = path.join(definitionPath, '.devcontainer');
-        const devContainerJsonPath = path.join(dotDevContainerPath, 'devcontainer.json');
-        const devContainerJsonRaw = await asyncUtils.readFile(devContainerJsonPath);
-        const devContainerJsonModified =
-            `// ${configUtils.getConfig('devContainerJsonPreamble')}\n// https://github.com/${repo}/tree/${release}/${containersPathInRepo}/${definitionId}\n` +
-            devContainerJsonRaw;
-        await asyncUtils.writeFile(devContainerJsonPath, devContainerJsonModified);
-
-        // Replace version specific content in Dockerfile
-        const dockerFilePath = path.join(dotDevContainerPath, 'Dockerfile');
-        if (await asyncUtils.exists(dockerFilePath)) {
-            await prepDockerFile(dockerFilePath, definitionId, repo, release, registry, registryPath, stubRegistry, stubRegistryPath, false);
-        }
-    },
-
-    prepDockerFile: prepDockerFile
+async function createStub(dotDevContainerPath, definitionId, repo, release, baseDockerFileExists, stubRegistry, stubRegistryPath) {
+    const userDockerFilePath = path.join(dotDevContainerPath, 'Dockerfile');
+    console.log('(*) Generating user Dockerfile...');
+    const templateDockerfile = await configUtils.objectByDefinitionLinuxDistro(definitionId, stubPromises);
+    const majorMinor = configUtils.majorMinorFromRelease(release);
+    const imageTag = configUtils.getTagsForVersion(definitionId, majorMinor, stubRegistry, stubRegistryPath)[0];
+    const userDockerFile = templateDockerfile.replace(
+        'FROM REPLACE-ME', getFromSnippet(definitionId, imageTag, repo, release, baseDockerFileExists));
+    await asyncUtils.writeFile(userDockerFilePath, userDockerFile);
 }
 
+async function updateStub(dotDevContainerPath, definitionId, repo, release, baseDockerFileExists, registry, registryPath) {
+    console.log('(*) Updating user Dockerfile...');
+    const userDockerFilePath = path.join(dotDevContainerPath, 'Dockerfile');
+    const userDockerFile = await asyncUtils.readFile(userDockerFilePath);
 
+    const majorMinor = configUtils.majorMinorFromRelease(release);
+    const imageTag = configUtils.getTagsForVersion(definitionId, majorMinor, registry, registryPath)[0];
+    const userDockerFileModified = userDockerFile.replace(/FROM .+:.+/,
+        getFromSnippet(definitionId, imageTag, repo, release, baseDockerFileExists));
+    await asyncUtils.writeFile(userDockerFilePath, userDockerFileModified);
+}
+
+async function updateConfigForRelease(definitionPath, definitionId, repo, release, registry, registryPath, stubRegistry, stubRegistryPath) {
+    // Look for context in devcontainer.json and use it to build the Dockerfile
+    console.log(`(*) Making version specific updates to ${definitionId}...`);
+    const dotDevContainerPath = path.join(definitionPath, '.devcontainer');
+    const devContainerJsonPath = path.join(dotDevContainerPath, 'devcontainer.json');
+    const devContainerJsonRaw = await asyncUtils.readFile(devContainerJsonPath);
+    const devContainerJsonModified =
+        `// ${configUtils.getConfig('devContainerJsonPreamble')}\n// https://github.com/${repo}/tree/${release}/${containersPathInRepo}/${definitionId}\n` +
+        devContainerJsonRaw;
+    await asyncUtils.writeFile(devContainerJsonPath, devContainerJsonModified);
+
+    // Replace version specific content in Dockerfile
+    const dockerFilePath = path.join(dotDevContainerPath, 'Dockerfile');
+    if (await asyncUtils.exists(dockerFilePath)) {
+        await prepDockerFile(dockerFilePath, definitionId, repo, release, registry, registryPath, stubRegistry, stubRegistryPath, false);
+    }
+}
+
+module.exports = {
+    createStub: createStub,
+    updateStub: updateStub,
+    updateConfigForRelease: updateConfigForRelease,
+    prepDockerFile: prepDockerFile
+}
