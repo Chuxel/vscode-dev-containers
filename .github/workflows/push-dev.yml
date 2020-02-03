@@ -36,9 +36,9 @@ jobs:
         if [ "$GIT_BRANCH" == "" ]; then 
             GIT_BRANCH=master
         fi
-        build/vscdc push  --release $GIT_BRANCH \
-                          --page 1 \
+        build/vscdc push  --page 1 \
                           --pageTotal 3 \
+                          --release $GIT_BRANCH \
                           --github-repo ${{ github.repository }} \
                           --registry ${{ secrets.REGISTRY }} \
                           --registry-path ${{ secrets.REGISTRY_BASE_PATH }} \
@@ -72,9 +72,9 @@ jobs:
         if [ "$GIT_BRANCH" == "" ]; then 
             GIT_BRANCH=master
         fi
-        build/vscdc push  --release $GIT_BRANCH \
-                          --page 2 \
+        build/vscdc push  --page 2 \
                           --pageTotal 3 \
+                          --release $GIT_BRANCH \
                           --github-repo ${{ github.repository }} \
                           --registry ${{ secrets.REGISTRY }} \
                           --registry-path ${{ secrets.REGISTRY_BASE_PATH }} \
@@ -108,9 +108,9 @@ jobs:
         if [ "$GIT_BRANCH" == "" ]; then 
             GIT_BRANCH=master
         fi
-        build/vscdc push  --release "$GIT_BRANCH" \
-                          --page 3 \
+        build/vscdc push  --page 3 \
                           --pageTotal 3 \
+                          --release "$GIT_BRANCH" \
                           --github-repo ${{ github.repository }} \
                           --registry ${{ secrets.REGISTRY }} \
                           --registry-path ${{ secrets.REGISTRY_BASE_PATH }} \
