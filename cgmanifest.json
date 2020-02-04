@@ -625,8 +625,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "Debian Package: sudo",
-                    "Version": "1.8.19p1-2.1+deb9u1",
-                    "DownloadUrl": "http://security.debian.org/debian-security/pool/updates/main/s/sudo/sudo_1.8.19p1-2.1+deb9u1_amd64.deb"
+                    "Version": "1.8.19p1-2.1+deb9u2",
+                    "DownloadUrl": "http://security.debian.org/debian-security/pool/updates/main/s/sudo/sudo_1.8.19p1-2.1+deb9u2_amd64.deb"
                 }
             }
         },
