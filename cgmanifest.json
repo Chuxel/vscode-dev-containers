@@ -135,8 +135,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "Alpine Package: libssl1.1",
-                    "Version": "1.1.1d-r0",
-                    "DownloadUrl": "1.1.1d-r2:/x86_64/libssl1.1-1.1.1d-r0.apk"
+                    "Version": "1.1.1d-r2",
+                    "DownloadUrl": "http://dl-cdn.alpinelinux.org/alpine/v3.10/main/x86_64/libssl1.1-1.1.1d-r2.apk"
                 }
             }
         },
@@ -195,8 +195,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "Alpine Package: sudo",
-                    "Version": "1.8.27-r0",
-                    "DownloadUrl": "http://dl-cdn.alpinelinux.org/alpine/v3.10/main/x86_64/sudo-1.8.27-r0.apk"
+                    "Version": "1.8.27-r2",
+                    "DownloadUrl": "http://dl-cdn.alpinelinux.org/alpine/v3.10/main/x86_64/sudo-1.8.27-r2.apk"
                 }
             }
         },
