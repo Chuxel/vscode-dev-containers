@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         page: [1, 2, 3]
+        page-total: [3]
       fail-fast: true
     runs-on: ubuntu-latest
     steps:
@@ -40,7 +41,7 @@ jobs:
             GIT_BRANCH=master
         fi
         build/vscdc push  --page ${{ matrix.page }} \
-                          --pageTotal 3 \
+                          --pageTotal ${{ matrix.page-total }} \
                           --release $GIT_BRANCH \
                           --github-repo ${{ github.repository }} \
                           --registry ${{ secrets.REGISTRY }} \
@@ -105,5 +106,4 @@ jobs:
           -H "Content-Type: application/json" \
           https://api.github.com/repos/${{ github.repository }}/dispatches \
           --data '{"event_type":"oss_cg_trigger"}'
-
 
