@@ -18,7 +18,7 @@ jobs:
     steps:
     - name: Checkout
       id: checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
 
     - name: Get Tag Name
       id: get_tag_name  
@@ -55,7 +55,31 @@ jobs:
     steps:
     - name: Checkout
       id: checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
+
+    - name: Get Tag Name
+      id: get_tag_name  
+      uses: olegtarasov/get-tag@v1
+
+    - name: Update script URIs and re-tag
+      id: update_script_uris
+      run: |
+        set -e
+        yarn install
+        # Update common script URIs in all dev containers and and set SHA hash
+        build/vscdc update-script-urls ${{ steps.get_tag_name.outputs.tag }} --github-repo ${{ github.repository }}
+        # Commit to a new tag specific branch
+        git config --global user.email "vscr-feedback@microsoft.com"
+        git config --global user.name "CI"
+        git fetch --tags
+        git branch ${{ steps.get_tag_name.outputs.tag }}-temp-branch
+        git add -u
+        git commit -m 'Automated update'
+        # Re-tag and push to origin
+        git tag -d ${{ steps.get_tag_name.outputs.tag }}
+        git tag ${{ steps.get_tag_name.outputs.tag }}
+        git push --delete origin ${{ steps.get_tag_name.outputs.tag }}
+        git push origin ${{ steps.get_tag_name.outputs.tag }}
 
     - name: Package
       id: package
@@ -79,8 +103,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
+        tag_name: ${{ steps.get_tag_name.outputs.tag }}
+        release_name:  ${{ steps.get_tag_name.outputs.tag }}
         draft: false
         prerelease: false
 
