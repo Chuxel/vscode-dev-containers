@@ -116,7 +116,7 @@ async function generatePackageComponentList(config, packageList, imageTag, alrea
         return prev += ` ${current}`;
     }, config.listCommand);
     const packageVersionListOutput = await asyncUtils.spawn('docker',
-        ['run', '--rm', imageTag, packageVersionListCommand],
+        ['run', '--rm', '-u', 'root', imageTag, packageVersionListCommand],
         { shell: true, stdio: 'pipe' });
 
     // Generate and exec command to extract download URIs
@@ -125,7 +125,7 @@ async function generatePackageComponentList(config, packageList, imageTag, alrea
         return prev += ` ${current}`;
     }, config.getUriCommand);
     const packageUriCommandOutput = await asyncUtils.spawn('docker',
-        ['run', '--rm', imageTag, `sh -c '${packageUriCommand}'`],
+        ['run', '--rm', '-u', 'root', imageTag, `sh -c '${packageUriCommand}'`],
         { shell: true, stdio: 'pipe' });
 
     const packageVersionList = packageVersionListOutput.split('\n');
