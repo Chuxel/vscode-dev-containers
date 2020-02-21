@@ -783,7 +783,7 @@
                 "Type": "npm",
                 "Npm": {
                     "Name": "typescript",
-                    "Version": "3.7.5"
+                    "Version": "3.8.2"
                 }
             }
         },
