@@ -1,10 +1,11 @@
 {
+	"definitionVersion": "0.1.0",
 	"build": {
 		"latest": true,
 		"rootDistro": "debian",
 		"tags": [
-			"vsonline:${VERSION}-linux",
-			"vsonline:${VERSION}"
+			"default:${VERSION}-linux",
+			"default:${VERSION}"
 		]
 	}, 
 	"dependencies": {

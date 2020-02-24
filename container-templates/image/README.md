@@ -25,11 +25,11 @@ Just follow these steps:
 2. To use VS Code's copy of this definition:
    1. Start VS Code and open your project folder.
    2. Press <kbd>F1</kbd> select and **Remote-Containers: Add Development Container Configuration Files...** from the command palette.
-   3. Select the Dart definition.
+   3. Select the [Name of Definition Here] definition.
 
 3. To use latest-and-greatest copy of this definition from the repository:
    1. Clone this repository.
-   2. Copy the contents of this folder in the cloned repository to the root of your project folder.
+   2. Copy the `.devcontainer` folder in the folder that contains this README in the cloned repository to the root of your project folder.
    3. Start VS Code and open your project folder.
 
 4. After following step 2 or 3, the contents of the `.devcontainer` folder in your project can be adapted to meet your needs.
