@@ -1,7 +1,5 @@
 name: Update CG Manifest
 
-az ad sp create-for-rbac --name "GitHubActions" --role contributor --scopes /subscriptions/f16b1f32-0ddd-47f1-b325-158328485971/resourceGroups/clantz-common --sdk-auth
-
 on:
   repository_dispatch:
 
