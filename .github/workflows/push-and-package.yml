@@ -24,20 +24,20 @@ jobs:
       id: get_tag_name  
       uses: olegtarasov/get-tag@v1
 
-    - name: Container registry login
-      id: docker_login
-      uses: azure/docker-login@v1
+    - name: Azure CLI login
+      id: az_login
+      uses: azure/login@v1
       with:
-        login-server: ${{ secrets.REGISTRY }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-      
+        creds: ${{ secrets.AZ_ACR_CREDS }}
+
     - name: Build and push
       id: build_and_push
       run: |
         set -e
         # Push images and package
         yarn install
+        ACR_REGISTRY_NAME=$(echo ${{ secrets.REGISTRY }} | grep -oP '(.+)(?=\.azurecr\.io)')
+        az acr login --name $ACR_REGISTRY_NAME
         build/vscdc push  --replace-images \
                           --page ${{ matrix.page }} \
                           --pageTotal ${{ matrix.page-total }} \

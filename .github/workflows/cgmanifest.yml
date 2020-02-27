@@ -1,5 +1,7 @@
 name: Update CG Manifest
 
+az ad sp create-for-rbac --name "GitHubActions" --role contributor --scopes /subscriptions/f16b1f32-0ddd-47f1-b325-158328485971/resourceGroups/clantz-common --sdk-auth
+
 on:
   repository_dispatch:
 
@@ -10,13 +12,11 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'Automated update') && !contains(github.event.head_commit.message, 'CI ignore')"
     steps:
 
-    - name: Container Registry Login
-      id: docker_login
-      uses: azure/docker-login@v1
+    - name: Azure CLI login
+      id: az_login
+      uses: azure/login@v1
       with:
-        login-server: ${{ secrets.REGISTRY }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
+        creds: ${{ secrets.AZ_ACR_CREDS }}
 
     - name: Checkout
       id: checkout
@@ -31,6 +31,8 @@ jobs:
         if [ "$GIT_BRANCH" == "" ]; then 
             GIT_BRANCH=master
         fi
+        ACR_REGISTRY_NAME=$(echo ${{ secrets.REGISTRY }} | grep -oP '(.+)(?=\.azurecr\.io)')
+        az acr login --name $ACR_REGISTRY_NAME
         build/vscdc cg  --no-build \
                         --release $GIT_BRANCH \
                         --github-repo ${{ github.repository }} \
