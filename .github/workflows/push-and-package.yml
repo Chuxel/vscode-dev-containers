@@ -38,8 +38,7 @@ jobs:
         yarn install
         ACR_REGISTRY_NAME=$(echo ${{ secrets.REGISTRY }} | grep -oP '(.+)(?=\.azurecr\.io)')
         az acr login --name $ACR_REGISTRY_NAME
-        build/vscdc push  --replace-images \
-                          --page ${{ matrix.page }} \
+        build/vscdc push  --page ${{ matrix.page }} \
                           --pageTotal ${{ matrix.page-total }} \
                           --release ${{ steps.get_tag_name.outputs.tag }} \
                           --github-repo ${{ github.repository }} \

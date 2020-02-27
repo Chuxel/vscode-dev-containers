@@ -9,16 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'Automated update') && !contains(github.event.head_commit.message, 'CI ignore')"
     steps:
+    - name: Checkout
+      id: checkout
+      uses: actions/checkout@v1
 
     - name: Azure CLI login
       id: az_login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZ_ACR_CREDS }}
-
-    - name: Checkout
-      id: checkout
-      uses: actions/checkout@v1
 
     - name: Update CG Manifest
       id: update_cg_manifest
