@@ -3,11 +3,11 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-ARG ORIGINAL_IMAGE=devcon.azurecr.io/public/vscode/devcontainers/base:0.99-ubuntu-18.04
-FROM ${ORIGINAL_IMAGE}
+ARG IMAGE_TO_TEST=debian:9
+FROM ${IMAGE_TO_TEST}
 
-RUN apt-get update  \
-    && apt-get upgrade -y libgcrypt20 \
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
+ARG DISTRO="debian"
+COPY common-${DISTRO}.sh /tmp/common-script.sh
+RUN if [ "${DISTRO}" = "debian" ]; then apt-get update; fi \
+    && chmod +x /tmp/common-script.sh \
+    && /tmp/common-script.sh true vscode 1000 1000
