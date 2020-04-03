@@ -25,6 +25,9 @@ jobs:
         export SUB=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).subscriptionId)')
 
         # Run test
+        echo Logging in...
         az login --service-principal -u $SVC_PRN -p $PRN_SECRET --tenant $TENANT
+        echo Show account..
         az account show
+        echo Account list...
         az account list --refresh
