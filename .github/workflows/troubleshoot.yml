@@ -3,8 +3,6 @@ name: Troubleshooting
 on: 
   push:
     branches: [ci-troubleshooting]
-    paths:
-      - '.github/workflows'
 
 jobs:
   troubleshooting:
