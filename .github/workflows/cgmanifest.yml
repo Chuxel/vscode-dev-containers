@@ -23,6 +23,12 @@ jobs:
       id: update_cg_manifest
       run: |
         set -e
+
+        # ACR login
+        ACR_REGISTRY_NAME=$(echo ${{ secrets.REGISTRY }} | grep -oP '(.+)(?=\.azurecr\.io)')
+        az acr login --name $ACR_REGISTRY_NAME
+
+        # Pull images and update cgmanifest.json
         yarn install
         GIT_BRANCH=$(echo "${{ github.ref }}" | grep -oP 'refs/(heads|tags)/\K(.+)')
         if [ "$GIT_BRANCH" == "" ]; then 
@@ -35,6 +41,8 @@ jobs:
                         --github-repo ${{ github.repository }} \
                         --registry ${{ secrets.REGISTRY }} \
                         --registry-path ${{ secrets.REGISTRY_BASE_PATH }}
+
+        # Push updated cgmnaifest.json to source control
         git config --global user.email "vscr-feedback@microsoft.com"
         git config --global user.name "CI"
         git add cgmanifest.json

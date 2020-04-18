@@ -840,7 +840,7 @@
                 "Type": "Pip",
                 "Pip": {
                     "Name": "autopep8",
-                    "Version": "1.5"
+                    "Version": "1.5.1"
                 }
             }
         },
@@ -912,7 +912,7 @@
                 "Type": "Pip",
                 "Pip": {
                     "Name": "virtualenv",
-                    "Version": "20.0.15"
+                    "Version": "20.0.17"
                 }
             }
         },
