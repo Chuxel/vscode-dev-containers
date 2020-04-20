@@ -36,7 +36,6 @@ jobs:
 
         # Ensure enough space is available for build
         sudo rm -rf /usr/local/share/boost
-        sudo rm -rf $AGENT_TOOLSDIRECTORY
         sudo rm -rf /usr/share/dotnet # 15GB
         sudo apt-get autoremove -y
         sudo apt-get clean -y
