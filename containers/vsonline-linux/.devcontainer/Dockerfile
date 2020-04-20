@@ -79,6 +79,13 @@ RUN apt-get update -yq \
     && apt-get update \
     && apt-get install -y azure-cli \
     #
+    # Install kubectl
+    && curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
+    && chmod +x /usr/local/bin/kubectl \
+    #
+    # Install Helm
+    && curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash - \
+    #
     # Setup vsonline user
     && { echo && echo "PATH=${EXTRA_PATHS_OVERRIDES}:\$PATH:${USER_EXTRA_PATHS}" ; } | tee -a /etc/bash.bashrc >> /etc/skel/.bashrc \
     && { echo && echo $BASH_PROMPT ; } | tee -a /etc/bash.bashrc >> /etc/skel/.bashrc \
@@ -89,6 +96,8 @@ RUN apt-get update -yq \
     && echo "vsonline ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd \
     && echo "Defaults secure_path=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:${EXTRA_PATHS}\"" >> /etc/sudoers.d/securepath \
     && sudo -u vsonline mkdir /home/vsonline/.vsonline \
+    && groupadd -g 800 docker \
+    && usermod -a -G docker vsonline \
     #
     # Setup .NET Core
     # Hack to get dotnet core sdks in the right place - Oryx images do not put dotnet on the path because it will break AppService.
