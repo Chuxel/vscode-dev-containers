@@ -35,6 +35,7 @@ jobs:
         set -e
 
         # Ensure enough space is available for build
+        df -h
         sudo rm -rf /usr/local/share/boost
         sudo rm -rf /usr/share/dotnet # 15GB
         sudo apt-get autoremove -y
