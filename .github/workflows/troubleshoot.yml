@@ -24,16 +24,29 @@ jobs:
         sudo ls /usr/local/share/boost
         sudo ls $AGENT_TOOLSDIRECTORY
 
+        #Cleanup
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf $AGENT_TOOLSDIRECTORY
+        sudo rm -rf /usr/share/dotnet/
+        sudo apt-get remove -y '^ghc-8.*'
+        sudo apt-get remove -y '^dotnet-.*'
+        sudo apt-get remove -y '^llvm-.*'
+        sudo apt-get remove -y 'php.*'
+        sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
+        sudo apt-get autoremove -y
+        sudo apt-get clean
+        df -h
+          
         # Prep test
-        export SVC_PRN=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).clientId)')
-        export PRN_SECRET=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).clientSecret)')
-        export TENANT=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).tenantId)')
-        export SUB=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).subscriptionId)')
+        #export SVC_PRN=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).clientId)')
+        #export PRN_SECRET=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).clientSecret)')
+        #export TENANT=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).tenantId)')
+        #export SUB=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).subscriptionId)')
 
         # Run test
-        echo Logging in...
-        az login --service-principal -u $SVC_PRN -p $PRN_SECRET --tenant $TENANT
-        echo Show account..
-        az account show
-        echo Account list...
-        az account list --refresh
+        #echo Logging in...
+        #az login --service-principal -u $SVC_PRN -p $PRN_SECRET --tenant $TENANT
+        #echo Show account..
+        #az account show
+        #echo Account list...
+        #az account list --refresh
