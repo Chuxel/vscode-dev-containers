@@ -17,6 +17,12 @@ jobs:
       id: troubleshooting_script
       run: |
         set -e
+        
+        dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
+        df -h
+
+        sudo ls /usr/local/share/boost
+        sudo ls $AGENT_TOOLSDIRECTORY
 
         # Prep test
         export SVC_PRN=$(node -e 'console.log(JSON.parse(`${{ secrets.AZ_ACR_CREDS }}`).clientId)')
