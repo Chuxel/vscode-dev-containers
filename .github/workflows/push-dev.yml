@@ -35,8 +35,12 @@ jobs:
         set -e
 
         # Ensure enough space is available for build
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf $AGENT_TOOLSDIRECTORY
+        sudo rm -rf /usr/share/dotnet # 15GB
         sudo apt-get autoremove -y
         sudo apt-get clean -y
+        df -h
 
         # ACR login
         ACR_REGISTRY_NAME=$(echo ${{ secrets.REGISTRY }} | grep -oP '(.+)(?=\.azurecr\.io)')
@@ -56,6 +60,9 @@ jobs:
                           --registry-path ${{ secrets.REGISTRY_BASE_PATH }} \
                           --stub-registry ${{ secrets.STUB_REGISTRY }} \
                           --stub-registry-path ${{ secrets.STUB_REGISTRY_BASE_PATH }}
+
+        df -h
+
 
   package:
     name: Package
