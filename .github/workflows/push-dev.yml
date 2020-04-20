@@ -34,6 +34,9 @@ jobs:
       run: |
         set -e
 
+        sudo apt-get autoremove
+        sudo apt-get clean
+
         # ACR login
         ACR_REGISTRY_NAME=$(echo ${{ secrets.REGISTRY }} | grep -oP '(.+)(?=\.azurecr\.io)')
         az acr login --name $ACR_REGISTRY_NAME
