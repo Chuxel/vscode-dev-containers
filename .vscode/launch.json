@@ -11,6 +11,7 @@
 			"program": "${workspaceFolder}/build/vscdc",
 			"args": [
 				"push",
+				"docker-in-docker",
 				"--page", "1",
 				"--pageTotal", "4",
 				"--release", "master",
@@ -58,9 +59,9 @@
 			"program": "${workspaceFolder}/build/vscdc",
 			"cwd": "${workspaceFolder}/build",
 			"args": [
-				"update-script-urls",
+				"update-script-sources",
 				"v0.100.0",
-				"--github-repo", "microsoft/vscode-dev-containers"
+				"--github-repo", "chuxel/vscode-dev-containers"
 			]
 		},
 		{
