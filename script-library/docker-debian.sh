@@ -19,7 +19,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Install Docker CLI
-apt-get -y install  --no-install-recommends apt-transport-https ca-certificates curl gpg-agent lsb-release
+apt-get -y install  --no-install-recommends apt-transport-https ca-certificates curl gnupg-agent lsb-release
 curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | (OUT=$(apt-key add - 2>&1) || echo $OUT)
 echo "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list
 apt-get update
