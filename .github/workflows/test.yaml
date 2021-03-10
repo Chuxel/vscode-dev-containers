@@ -14,10 +14,15 @@ jobs:
       id: checkout
       uses: actions/checkout@v2
 
+   - name: Get toag name
+     id: get_tag_name
+     run: echo ::set-output name=tag_name::${GITHUB_REF/refs\/tags\//}
+
     - name: run tests
       id: run_tests
       run: |
         set -e
 
         echo ${{ github.event.ref }}
+        echo ${{ steps.get_tag_name.output.tag_name }}
 
