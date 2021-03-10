@@ -18,6 +18,10 @@ jobs:
       id: get_tag_name
       run: echo "::set-output name=tag::$(echo "${{ github.ref }}" | grep -oP 'refs/tags/\K(.+)')"
 
+    - name: Get tag name2
+      id: get_tag_name2  
+      uses: little-core-labs/get-git-tag@v3.0.2
+
     - name: run tests
       id: run_tests
       run: |
@@ -25,4 +29,5 @@ jobs:
 
         echo ${{ github.event.ref }}
         echo ${{ steps.get_tag_name.outputs.tag }}
+        echo ${{ steps.get_tag_name2.outputs.tag }}
 
