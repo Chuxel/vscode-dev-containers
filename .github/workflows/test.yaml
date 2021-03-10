@@ -1,0 +1,23 @@
+name: Release Containers
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      id: checkout
+      uses: actions/checkout@v2
+
+    - name: run tests
+      id: run_tests
+      run: |
+        set -e
+
+        echo ${{ github.event.ref }}
+
